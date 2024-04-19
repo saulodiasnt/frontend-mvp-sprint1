@@ -1,0 +1,21 @@
+@import url("https://cdn.datatables.net/2.0.4/css/dataTables.dataTables.css");
+
+.dashboard_page {
+  #chart {
+    max-width: 650px;
+    margin: 35px auto;
+  }
+
+  .add_task_button {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
+  .action_button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+}
