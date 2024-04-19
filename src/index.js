@@ -54,7 +54,6 @@ document.addEventListener(
     store.subscribe(() => {
       const currentRoute = "/" + router.getCurrentLocation().url;
       const user = checkAuth();
-      console.log("currentRoute", currentRoute);
 
       if (!user && !PUBLIC_ROUTES.includes(currentRoute)) {
         router.navigate("/");

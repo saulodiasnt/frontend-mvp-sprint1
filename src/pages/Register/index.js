@@ -3,7 +3,6 @@ import { registerUser } from "../../store/user-slice";
 
 export function register() {
   const app = document.getElementById("app");
-  console.log("register");
 
   app.innerHTML = `
     <h1>register</h1><button onClick=></button>`;

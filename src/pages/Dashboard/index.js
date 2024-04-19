@@ -10,108 +10,17 @@ import "./style.scss";
 import dashboardTemplate from "./templates/dashboard.hbs";
 import { getTasks } from "../../store/task-slice";
 
+import * as taskService from "../../services/task.service";
+
 export function dashboardPage() {
   store.dispatch(getTasks());
+  const tasks = store?.getState()?.task?.value || [];
 
   const app = document.getElementById("app");
-  const dataMock = [
-    {
-      id: 1,
-      title: "teste",
-      type: "teste",
-      date: "2021-09-30",
-      start_time: "10:00",
-      end_time: "12:00",
-      description: "teste",
-    },
-    {
-      id: 2,
-      title: "teste2",
-      type: "teste",
-      date: "2021-09-30",
-      start_time: "10:00",
-      end_time: "12:00",
-      description: "teste",
-    },
-    {
-      id: 3,
-      title: "teste",
-      type: "teste",
-      date: "2021-09-30",
-      start_time: "10:00",
-      end_time: "12:00",
-      description: "teste",
-    },
-    {
-      id: 4,
-      title: "teste",
-      type: "teste",
-      date: "2021-09-30",
-      start_time: "10:00",
-      end_time: "12:00",
-      description: "teste",
-    },
-    {
-      id: 5,
-      title: "teste",
-      type: "teste",
-      date: "2021-09-30",
-      start_time: "10:00",
-      end_time: "12:00",
-      description: "teste",
-    },
-    {
-      id: 6,
-      title: "teste",
-      type: "teste",
-      date: "2021-09-30",
-      start_time: "10:00",
-      end_time: "12:00",
-      description: "teste",
-    },
-    {
-      id: 7,
-      title: "teste",
-      type: "teste",
-      date: "2021-09-30",
-      start_time: "10:00",
-      end_time: "12:00",
-      description: "teste",
-    },
-    {
-      id: 8,
-      title: "teste",
-      type: "teste",
-      date: "2021-09-30",
-      start_time: "10:00",
-      end_time: "12:00",
-      description: "teste",
-    },
-    {
-      id: 9,
-      title: "teste",
-      type: "teste",
-      date: "2021-09-30",
-      start_time: "10:00",
-      end_time: "12:00",
-      description: "teste",
-    },
-    {
-      id: 10,
-      title: "teste",
-      type: "teste",
-      date: "2021-09-30",
-      start_time: "10:00",
-      end_time: "12:00",
-      description: "teste",
-    },
-  ];
-  const htmlString = dashboardTemplate({ tasks: dataMock });
+  const htmlString = dashboardTemplate({ tasks: tasks });
   const html = parseHtmlFromString(htmlString);
 
   const formAddTask = html.querySelector("#form_add_task");
-  const deleteButtons = html.querySelectorAll(".delete-button");
-  const editButtons = html.querySelectorAll(".edit-button");
   const addTaskButton = html.querySelector(".add_task_button");
   const modalElement = html.querySelector("#crud-modal");
 
@@ -125,12 +34,6 @@ export function dashboardPage() {
       onHide: () => {
         formAddTask.reset();
       },
-      onShow: () => {
-        console.log("modal is shown");
-      },
-      onToggle: () => {
-        console.log("modal has been toggled");
-      },
     },
     {
       id: "crud-modal",
@@ -138,66 +41,137 @@ export function dashboardPage() {
     }
   );
 
-  deleteButtons?.forEach((button) => {
-    button.addEventListener("click", (e) => {
-      e.preventDefault();
-      const id = button.getAttribute("data-task-id");
-      const task = dataMock.find((task) => task.id === parseInt(id));
-
-      Swal.fire({
-        title: "Are you sure?",
-        text: `You will not be able to recover the task: ${task.title}`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "No, keep it",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          Swal.fire("Deleted!", "Your task has been deleted.", "success");
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
-          Swal.fire("Cancelled", "Your task is safe :)", "error");
-        }
-      });
-    });
-  });
-
-  editButtons?.forEach((button) => {
-    button.addEventListener("click", (e) => {
-      e.preventDefault();
-      const id = button.getAttribute("data-task-id");
-      const task = dataMock.find((task) => task.id === parseInt(id));
-      formAddTask.querySelector("#task_title").value = task.title;
-      formAddTask.querySelector("#task_type").value = task.type;
-      formAddTask.querySelector("#task_date").value = task.date;
-      formAddTask.querySelector("#task_start_time").value = task.start_time;
-      formAddTask.querySelector("#task_end_time").value = task.end_time;
-      formAddTask.querySelector("#task_description").value = task.description;
-      modal.show();
-      console.log("edit", id);
-    });
-  });
-
   addTaskButton?.addEventListener("click", (e) => {
     e.preventDefault();
     modal.show();
   });
 
-  formAddTask?.addEventListener("submit", (e) => {
+  formAddTask?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const task_id = formAddTask.querySelector("#task_id")?.value;
     const formBody = {
       title: formAddTask.querySelector("#task_title")?.value,
       type: formAddTask.querySelector("#task_type")?.value,
       date: formAddTask.querySelector("#task_date")?.value,
-      startTime: formAddTask.querySelector("#task_start_time")?.value,
-      endTime: formAddTask.querySelector("#task_end_time")?.value,
-      descriptin: formAddTask.querySelector("#task_description")?.value,
+      start_time: formAddTask.querySelector("#task_start_time")?.value,
+      end_time: formAddTask.querySelector("#task_end_time")?.value,
+      description: formAddTask.querySelector("#task_description")?.value,
     };
-    console.log(formBody);
+
+    try {
+      if (task_id) {
+        const body = { ...formBody, id: task_id };
+
+        await taskService.updateTask(body);
+      } else {
+        await taskService.createTask(formBody);
+      }
+      Swal.fire({
+        icon: "success",
+        title: "Task saved successfully",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      store.dispatch(getTasks());
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "An error occurred when trying to register your task, try again later.",
+      });
+    } finally {
+      modal.hide();
+    }
   });
 
   render(html, app, false, () => {
     $(function () {
-      $("#example").DataTable();
+      const table = $("#table-tasks").DataTable();
+
+      store.subscribe(() => {
+        const tasks = store.getState()?.task?.value || [];
+        const parseTasks = tasks.map((task) => {
+          const buttons = `<div class="action_button">
+          <button class="hover:text-indigo-600 edit-button" data-task-id="${task.id}"><i class="fas fa-pencil-alt"></i></button>
+          <button class="hover:text-red-600 delete-button" data-task-id="${task.id}"><i class="fas fa-trash-alt"></i></button>
+      </div>`;
+
+          return [
+            task.title,
+            task.description,
+            task.type,
+            task.date,
+            task.start_time,
+            task.end_time,
+            buttons,
+          ];
+        });
+
+        table.clear();
+        table.rows.add(parseTasks);
+        table.draw();
+
+        const editButtons = html.querySelectorAll(".edit-button");
+        const deleteButtons = html.querySelectorAll(".delete-button");
+
+        deleteButtons?.forEach((button) => {
+          button.addEventListener("click", (e) => {
+            e.preventDefault();
+            const id = button.getAttribute("data-task-id");
+            const task = tasks.find((task) => task.id === parseInt(id));
+
+            Swal.fire({
+              title: "Are you sure?",
+              text: `You will not be able to recover the task: ${task.title}`,
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonText: "Yes, delete it!",
+              cancelButtonText: "No, keep it",
+            }).then(async (result) => {
+              if (result.isConfirmed) {
+                await taskService.deleteTask(id);
+                store.dispatch(getTasks());
+                Swal.fire("Deleted!", "Your task has been deleted.", "success");
+              } else if (result.dismiss === Swal.DismissReason.cancel) {
+                Swal.fire("Cancelled", "Your task is safe :)", "error");
+              }
+            });
+          });
+        });
+
+        editButtons?.forEach((button) => {
+          button.addEventListener("click", (e) => {
+            e.preventDefault();
+            const id = button.getAttribute("data-task-id");
+            const task = tasks.find((task) => task.id === parseInt(id));
+            formAddTask.querySelector("#task_title").value = task.title;
+            selectedItem(formAddTask.querySelector("#task_type"), task.type);
+
+            formAddTask.querySelector("#task_date").value = task.date;
+            formAddTask.querySelector("#task_id").value = task.id;
+            formAddTask.querySelector("#task_start_time").value =
+              task.start_time;
+            formAddTask.querySelector("#task_end_time").value = task.end_time;
+            formAddTask.querySelector("#task_description").value =
+              task.description;
+            modal.show();
+          });
+        });
+      });
     });
   });
 }
+
+const selectedItem = (selectItem, optionValue) => {
+  for (const option of selectItem.options) {
+    if (option.value === optionValue) {
+      option.selected = true;
+      break;
+    }
+  }
+};
+
+store.subscribe(() => {
+  const tasks = store?.getState()?.task?.value || [];
+  // const htmlString = dashboardPage();
+});
