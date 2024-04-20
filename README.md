@@ -66,17 +66,3 @@ yarn build
 ```
 
 Isso criará um diretório `dist` com a versão de produção da sua aplicação.
-
-## Testando a aplicação
-
-Para executar os testes, use:
-
-```bash
-npm run test
-```
-
-ou
-
-```bash
-yarn test
-```
